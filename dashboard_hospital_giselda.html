@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Hospital Giselda Trigueiro 2025</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #15325b;
+            color: white;
+            padding: 25px 20px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-group select option {
+            background: #1e3a5f;
+            color: white;
+        }
+
+        .btn-clear {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            max-width: calc(100% - 280px);
+            overflow-y: auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #2563eb;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.2);
+        }
+
+        .kpi-card h3 {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-card .value {
+            color: #1e3a5f;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .kpi-card .subtext {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .kpi-card.highlight {
+            border-left-color: #059669;
+        }
+
+        .kpi-card.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .kpi-card.danger {
+            border-left-color: #ef4444;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card h3 {
+            color: #1e3a5f;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        canvas {
+            cursor: pointer;
+        }
+
+        .chart-card {
+            transition: box-shadow 0.2s ease;
+        }
+
+        .chart-wrapper.large {
+            height: 400px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+
+        .table-container h3 {
+            color: #1e3a5f;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #1e3a5f;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        td {
+            color: #475569;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .positive {
+            color: #059669;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-content {
+                max-width: 100%;
+            }
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .kpi-card .value {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Filtros do Dashboard</h2>
+        
+        <div class="filter-group">
+            <label>Filtrar por Categoria:</label>
+            <select id="categoryFilter" onchange="filterByCategory()">
+                <option value="all">Todas as Categorias</option>
+                <option value="pessoal">Pessoal</option>
+                <option value="material">Material de Consumo</option>
+                <option value="servicos">Serviços de Terceiros</option>
+                <option value="despesas">Despesas Gerais</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Período:</label>
+            <select id="periodFilter" onchange="filterByPeriod()">
+                <option value="all">Ano Completo</option>
+                <option value="q1">1º Trimestre</option>
+                <option value="q2">2º Trimestre</option>
+                <option value="q3">3º Trimestre</option>
+                <option value="q4">4º Trimestre</option>
+            </select>
+        </div>
+
+        <button class="btn-clear" onclick="limparFiltros()">
+            ✕ Limpar Filtros
+        </button>
+
+        <div id="activeFiltersBadge" style="display:none; margin-top:14px; background:rgba(37,99,235,0.18); border:1px solid rgba(96,165,250,0.45); border-radius:8px; padding:10px 12px; font-size:12px; color:#93c5fd; line-height:1.7;"></div>
+
+        <p style="color:#475569; font-size:11px; margin-top:18px; text-align:center; line-height:1.5;">💡 Clique nos gráficos para filtrar.<br>Clique novamente para desfazer.</p>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Hospital Giselda Trigueiro</h1>
+            <p>Dashboard de Custos - Ano 2025 | Gerado automaticamente via Python</p>
+        </div>
+
+        <div class="kpi-container">
+        <div class="kpi-card">
+            <h3>Custo Total Anual</h3>
+            <div class="value" id="kpiTotal">R$ 0</div>
+            <div class="subtext">Acumulado 2025</div>
+        </div>
+        <div class="kpi-card highlight">
+            <h3>Média Mensal</h3>
+            <div class="value" id="kpiMedia">R$ 0</div>
+            <div class="subtext">Média dos 12 meses</div>
+        </div>
+        <div class="kpi-card warning">
+            <h3>Maior Custo</h3>
+            <div class="value" id="kpiMaior">R$ 0</div>
+            <div class="subtext" id="kpiMaiorMes">-</div>
+        </div>
+        <div class="kpi-card danger">
+            <h3>Menor Custo</h3>
+            <div class="value" id="kpiMenor">R$ 0</div>
+            <div class="subtext" id="kpiMenorMes">-</div>
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-card full-width">
+            <h3>Evolução Mensal dos Custos por Categoria</h3>
+            <div class="chart-wrapper large">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Distribuição por Categoria</h3>
+            <div class="chart-wrapper">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Comparativo Mensal - Custo Total</h3>
+            <div class="chart-wrapper">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Top Materiais de Consumo</h3>
+            <div class="chart-wrapper">
+                <canvas id="horizontalBarChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Serviços de Terceiros - Detalhamento</h3>
+            <div class="chart-wrapper">
+                <canvas id="doughnutChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <h3>Resumo Mensal por Categoria</h3>
+        <table id="summaryTable">
+            <thead>
+                <tr>
+                    <th>Mês</th>
+                    <th>Pessoal</th>
+                    <th>Material</th>
+                    <th>Serviços</th>
+                    <th>Despesas</th>
+                    <th>Total</th>
+                    <th>Variação</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Dados carregados do Excel via Python
+        const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const mesesCompletos = ["Janeiro", "Fevereiro", "Mar\u00e7o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const dadosPessoal = [5606388.68, 5866164.83, 5713211.06, 5842853.92, 5979705.03, 6039255.66, 6207093.81, 6227769.0, 6187922.92, 6332104.88, 6292614.2, 6479691.75];
+        const dadosMaterial = [2020843.99, 1879564.3, 1846619.91, 1663285.36, 1989273.71, 1929426.41, 1954524.55, 2056513.92, 2210761.39, 2128132.42, 1089086.14, 361425.26];
+        const dadosServicos = [728719.099999999, 686009.729999999, 684464.559999999, 701914.319999999, 708943.839999999, 681346.349999999, 649723.379999999, 659856.249999999, 676737.089999999, 676026.479999999, 474721.629999999, 94875.3299999997];
+        const dadosDespesas = [180872.05, 164491.31, 168844.8, 168102.21, 206742.019999999, 171591.15, 151896.999999999, 166310.329999999, 167400.359999999, 172948.769999999, 174598.849999999, 87.3799999999993];
+        const materiaisSubcategorias = {"Medicamentos": [1513069.75, 1420606.82, 1441053.3, 1193268.66, 1552695.06, 1539523.42, 1597395.56, 1678221.4, 1725921.33, 1793597.07, 650750.04, 0.0], "G\u00eaneros de Alimenta\u00e7\u00e3o": [183778.07, 139776.06, 129624.43, 168936.34, 189115.22, 137312.13, 13799.72, 33197.86, 96961.63, 72632.73, 120453.97, 84766.9], "Vacinas": [125427.33, 99072.77, 109759.84, 94835.37, 24194.99, 102400.93, 125820.45, 123009.93, 129469.65, 86426.99, 120614.43, 112727.31], "Nutri\u00e7\u00e3o Enteral": [73876.66, 71881.62, 46279.36, 83607.48, 70308.0, 40371.3, 72081.08, 83785.37, 80193.41, 87367.2, 71436.13, 84355.02], "Gases Medicinais": [40910.19, 49023.83, 37736.03, 35664.97, 52841.84, 42238.06, 46364.7, 45363.75, 99630.43, 1284.15, 71297.0, 0.0], "Material de Limpeza": [24555.83, 32560.27, 31307.59, 29769.72, 27593.59, 17142.07, 35624.1, 16534.35, 21072.03, 16365.28, 5578.8, 21680.09], "F\u00f3rmulas Nutricionais": [12945.24, 16031.04, 7857.24, 12304.1, 11558.08, 3947.92, 13368.36, 21236.25, 3899.54, 12009.9, 5281.02, 10670.96], "GLP": [11208.0, 6538.0, 12609.0, 7787.7, 7787.7, 10994.4, 10994.4, 10994.4, 9465.3, 15300.0, 11900.0, 12540.0], "Embalagem": [11505.8, 15109.8, 7987.22, 13014.86, 13484.99, 9710.06, 14573.99, 14736.42, 16716.98, 10247.29, 8798.25, 8520.9], "Combust\u00edveis": [2948.49, 2948.4, 1286.03, 2532.52, 2423.14, 2173.25, 2836.77, 2342.54, 2297.11, 2631.57, 1723.2, 1912.08], "Material de Expediente": [3431.24, 2887.09, 2531.34, 3522.36, 3042.0, 2680.43, 4176.32, 3186.2, 3042.51, 6018.72, 7474.6, 3900.73], "Material Laboratorial": [1606.1, 5498.08, 4899.35, 3932.37, 19207.92, 797.94, 112.8, 7163.0, 4941.6, 1760.86, 1989.78, 1352.51]};
+        const servicosSubcategorias = {"Limpeza e Conserva\u00e7\u00e3o": [147515.35, 157595.2, 151203.22, 153772.71, 146150.18, 157236.21, 152429.98, 160621.02, 161440.12, 156626.29, 0.0, 0.0], "Vigil\u00e2ncia/Seguran\u00e7a": [129694.6, 129694.6, 129694.6, 129694.6, 129694.6, 129694.6, 129694.6, 129694.6, 129694.6, 129694.6, 129694.6, 0.0], "Apoio Administrativo": [93745.16, 94203.12, 98425.68, 94780.39, 91923.11, 97151.39, 104919.11, 102479.51, 106140.58, 106505.41, 82530.37, 0.0], "M\u00e9dico-Hospitalares": [84820.09, 59291.24, 67848.87, 68941.08, 92105.46, 76190.44, 41443.87, 45524.63, 59327.25, 63588.06, 74258.09, 37075.03], "Manuten\u00e7\u00e3o Bens Im\u00f3veis": [61578.25, 61578.25, 61930.81, 61578.25, 61578.25, 61930.81, 61930.81, 61601.32, 61645.91, 61930.81, 61930.81, 0.0], "Lavanderia": [50093.32, 50093.32, 50093.32, 50093.32, 50093.32, 50093.32, 50093.32, 50093.32, 50093.32, 50093.32, 50093.32, 0.0], "Manuten\u00e7\u00e3o M\u00e1quinas": [39973.75, 11310.33, 11116.33, 14507.13, 10146.33, 10146.33, 10196.33, 14277.35, 16253.33, 15186.33, 10146.33, 10646.33], "Tratamento de Res\u00edduos": [27166.6599999997, 27166.6599999997, 27166.6599999997, 27166.6599999997, 27166.6599999997, 8149.89999999993, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "Laborat\u00f3rio": [26322.12, 24758.34, 26661.03, 29091.8, 28049.28, 25824.2, 27426.88, 28329.36, 26991.2, 27465.78, 25116.22, 13780.76], "Transporte": [5197.75, 5197.75, 4260.67, 4916.16, 4916.16, 4916.16, 4916.16, 4916.16, 4916.16, 4916.16, 4916.16, 0.0], "Aluguel M\u00e1quinas": [13764.8399999998, 13764.8399999998, 13764.8399999998, 13764.8399999998, 13764.8399999999, 13764.8399999999, 13764.8399999998, 13764.8399999998, 13764.8399999998, 13764.8399999998, 13764.8399999998, 13764.8399999998], "Aluguel Ve\u00edculos": [9820.8, 9820.8, 9820.8, 9820.8, 9820.8, 9820.8, 9820.8, 9820.8, 9820.8, 9820.8, 9820.8, 9820.8]};
+
+        // Calcular totais mensais
+        const totaisMensais = dadosPessoal.map((val, idx) =>
+            val + dadosMaterial[idx] + dadosServicos[idx] + dadosDespesas[idx]
+        );
+
+        // Variáveis para os gráficos
+        let lineChart, pieChart, barChart, horizontalBarChart, doughnutChart;
+        let activeCategories = ['pessoal', 'material', 'servicos', 'despesas'];
+        let currentPeriod = 'all';
+        let selectedMonth = null;
+        let selectedCategory = null;
+        let selectedMaterial = null;
+
+        // Cores do tema
+        const cores = {
+            pessoal: { bg: 'rgba(37, 99, 235, 0.8)', border: 'rgb(37, 99, 235)' },
+            material: { bg: 'rgba(5, 150, 105, 0.8)', border: 'rgb(5, 150, 105)' },
+            servicos: { bg: 'rgba(245, 158, 11, 0.8)', border: 'rgb(245, 158, 11)' },
+            despesas: { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' }
+        };
+
+        const coresArray = [
+            'rgba(37, 99, 235, 0.85)',   // Azul
+            'rgba(16, 185, 129, 0.85)',  // Esmeralda
+            'rgba(245, 158, 11, 0.85)',  // Âmbar
+            'rgba(239, 68, 68, 0.85)',   // Vermelho
+            'rgba(139, 92, 246, 0.85)',  // Violeta
+            'rgba(20, 184, 166, 0.85)',  // Teal
+            'rgba(236, 72, 153, 0.85)',  // Rosa
+            'rgba(234, 179, 8, 0.85)',   // Amarelo
+            'rgba(99, 102, 241, 0.85)',  // Índigo
+            'rgba(6, 182, 212, 0.85)',   // Ciano
+            'rgba(132, 204, 22, 0.85)',  // Lima
+            'rgba(244, 63, 94, 0.85)'    // Rose
+        ];
+
+        const coresBordaArray = [
+            'rgb(37, 99, 235)',
+            'rgb(16, 185, 129)',
+            'rgb(245, 158, 11)',
+            'rgb(239, 68, 68)',
+            'rgb(139, 92, 246)',
+            'rgb(20, 184, 166)',
+            'rgb(236, 72, 153)',
+            'rgb(234, 179, 8)',
+            'rgb(99, 102, 241)',
+            'rgb(6, 182, 212)',
+            'rgb(132, 204, 22)',
+            'rgb(244, 63, 94)'
+        ];
+
+        // Funções utilitárias
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function formatCurrencyShort(value) {
+            if (value >= 1000000) {
+                return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                return 'R$ ' + (value / 1000).toFixed(0) + 'K';
+            }
+            return formatCurrency(value);
+        }
+
+        function getDataByPeriod(data, period) {
+            switch(period) {
+                case 'q1': return data.slice(0, 3);
+                case 'q2': return data.slice(3, 6);
+                case 'q3': return data.slice(6, 9);
+                case 'q4': return data.slice(9, 12);
+                default: return data;
+            }
+        }
+
+        function getMesesByPeriod(period) {
+            switch(period) {
+                case 'q1': return meses.slice(0, 3);
+                case 'q2': return meses.slice(3, 6);
+                case 'q3': return meses.slice(6, 9);
+                case 'q4': return meses.slice(9, 12);
+                default: return meses;
+            }
+        }
+
+        // Atualizar KPIs
+        function updateKPIs() {
+            const period = document.getElementById('periodFilter').value;
+            const totais = getDataByPeriod(totaisMensais, period);
+            const mesesPeriodo = period === 'all' ? mesesCompletos : getMesesByPeriod(period).map(m => {
+                const idx = meses.indexOf(m);
+                return mesesCompletos[idx];
+            });
+
+            const total = totais.reduce((a, b) => a + b, 0);
+            const media = total / totais.length;
+            const maior = Math.max(...totais);
+            const menor = Math.min(...totais);
+            const idxMaior = totais.indexOf(maior);
+            const idxMenor = totais.indexOf(menor);
+
+            document.getElementById('kpiTotal').textContent = formatCurrency(total);
+            document.getElementById('kpiMedia').textContent = formatCurrency(media);
+            document.getElementById('kpiMaior').textContent = formatCurrency(maior);
+            document.getElementById('kpiMaiorMes').textContent = mesesPeriodo[idxMaior];
+            document.getElementById('kpiMenor').textContent = formatCurrency(menor);
+            document.getElementById('kpiMenorMes').textContent = mesesPeriodo[idxMenor];
+        }
+
+        // Criar gráfico de linha
+        function createLineChart() {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            const period = document.getElementById('periodFilter').value;
+
+            const datasets = [];
+
+            if (activeCategories.includes('pessoal')) {
+                datasets.push({
+                    label: 'Pessoal',
+                    data: getDataByPeriod(dadosPessoal, period),
+                    borderColor: cores.pessoal.border,
+                    backgroundColor: cores.pessoal.bg,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                });
+            }
+
+            if (activeCategories.includes('material')) {
+                datasets.push({
+                    label: 'Material de Consumo',
+                    data: getDataByPeriod(dadosMaterial, period),
+                    borderColor: cores.material.border,
+                    backgroundColor: cores.material.bg,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                });
+            }
+
+            if (activeCategories.includes('servicos')) {
+                datasets.push({
+                    label: 'Serviços de Terceiros',
+                    data: getDataByPeriod(dadosServicos, period),
+                    borderColor: cores.servicos.border,
+                    backgroundColor: cores.servicos.bg,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                });
+            }
+
+            if (activeCategories.includes('despesas')) {
+                datasets.push({
+                    label: 'Despesas Gerais',
+                    data: getDataByPeriod(dadosDespesas, period),
+                    borderColor: cores.despesas.border,
+                    backgroundColor: cores.despesas.bg,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                });
+            }
+
+            if (lineChart) lineChart.destroy();
+
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: getMesesByPeriod(period),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyShort(value);
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(evt, elements) {
+                        if (elements.length > 0) {
+                            const idx = elements[0].index;
+                            highlightMonth(idx);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Criar gráfico de pizza
+        function createPieChart() {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            const period = document.getElementById('periodFilter').value;
+
+            const totals = [
+                getDataByPeriod(dadosPessoal, period).reduce((a, b) => a + b, 0),
+                getDataByPeriod(dadosMaterial, period).reduce((a, b) => a + b, 0),
+                getDataByPeriod(dadosServicos, period).reduce((a, b) => a + b, 0),
+                getDataByPeriod(dadosDespesas, period).reduce((a, b) => a + b, 0)
+            ];
+
+            if (pieChart) pieChart.destroy();
+
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Pessoal', 'Material de Consumo', 'Serviços de Terceiros', 'Despesas Gerais'],
+                    datasets: [{
+                        data: totals,
+                        backgroundColor: [
+                            cores.pessoal.bg,
+                            cores.material.bg,
+                            cores.servicos.bg,
+                            cores.despesas.bg
+                        ],
+                        borderColor: [
+                            cores.pessoal.border,
+                            cores.material.border,
+                            cores.servicos.border,
+                            cores.despesas.border
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.raw / total) * 100).toFixed(1);
+                                    return context.label + ': ' + formatCurrency(context.raw) + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(evt, elements) {
+                        if (elements.length > 0) {
+                            const categories = ['pessoal', 'material', 'servicos', 'despesas'];
+                            const category = categories[elements[0].index];
+                            if (selectedCategory === category) {
+                                selectedCategory = null;
+                                activeCategories = ['pessoal', 'material', 'servicos', 'despesas'];
+                                document.getElementById('categoryFilter').value = 'all';
+                            } else {
+                                selectedCategory = category;
+                                activeCategories = [category];
+                                document.getElementById('categoryFilter').value = category;
+                            }
+                            updateActiveFiltersDisplay();
+                            createLineChart();
+                            updateKPIs();
+                        }
+                    }
+                }
+            });
+        }
+
+        // Criar gráfico de barras
+        function createBarChart() {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            const period = document.getElementById('periodFilter').value;
+
+            if (barChart) barChart.destroy();
+
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: getMesesByPeriod(period),
+                    datasets: [{
+                        label: 'Custo Total',
+                        data: getDataByPeriod(totaisMensais, period),
+                        backgroundColor: getDataByPeriod(totaisMensais, period).map((val, idx) =>
+                            selectedMonth !== null && idx !== selectedMonth
+                                ? 'rgba(37, 99, 235, 0.18)'
+                                : 'rgba(37, 99, 235, 0.85)'
+                        ),
+                        borderColor: getDataByPeriod(totaisMensais, period).map((val, idx) =>
+                            selectedMonth !== null && idx !== selectedMonth
+                                ? 'rgba(37, 99, 235, 0.30)'
+                                : 'rgb(37, 99, 235)'
+                        ),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Total: ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyShort(value);
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(evt, elements) {
+                        if (elements.length > 0) {
+                            const idx = elements[0].index;
+                            if (selectedMonth === idx) {
+                                selectedMonth = null;
+                                resetHighlights();
+                            } else {
+                                selectedMonth = idx;
+                                highlightMonth(idx);
+                            }
+                            updateActiveFiltersDisplay();
+                        } else {
+                            selectedMonth = null;
+                            resetHighlights();
+                            updateActiveFiltersDisplay();
+                        }
+                    }
+                }
+            });
+        }
+
+        // Criar gráfico de barras horizontais (Top Materiais)
+        function createHorizontalBarChart() {
+            const ctx = document.getElementById('horizontalBarChart').getContext('2d');
+            const period = document.getElementById('periodFilter').value;
+
+            const totals = {};
+            for (const [key, values] of Object.entries(materiaisSubcategorias)) {
+                totals[key] = getDataByPeriod(values, period).reduce((a, b) => a + b, 0);
+            }
+
+            const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+
+            if (horizontalBarChart) horizontalBarChart.destroy();
+
+            horizontalBarChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(item => item[0]),
+                    datasets: [{
+                        label: 'Total',
+                        data: sorted.map(item => item[1]),
+                        backgroundColor: sorted.map(item =>
+                            selectedMaterial !== null && item[0] !== selectedMaterial
+                                ? 'rgba(203, 213, 225, 0.4)'
+                                : coresArray[sorted.indexOf(item) % coresArray.length]
+                        ),
+                        borderColor: sorted.map(item =>
+                            selectedMaterial !== null && item[0] !== selectedMaterial
+                                ? 'rgba(203, 213, 225, 0.6)'
+                                : coresBordaArray[sorted.indexOf(item) % coresBordaArray.length]
+                        ),
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyShort(value);
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(evt, elements) {
+                        if (elements.length > 0) {
+                            const label = sorted[elements[0].index][0];
+                            if (selectedMaterial === label) {
+                                selectedMaterial = null;
+                            } else {
+                                selectedMaterial = label;
+                            }
+                            updateActiveFiltersDisplay();
+                            createHorizontalBarChart();
+                        } else {
+                            selectedMaterial = null;
+                            updateActiveFiltersDisplay();
+                            createHorizontalBarChart();
+                        }
+                    }
+                }
+            });
+        }
+
+        // Criar gráfico de rosca (Serviços)
+        function createDoughnutChart() {
+            const ctx = document.getElementById('doughnutChart').getContext('2d');
+            const period = document.getElementById('periodFilter').value;
+
+            const totals = {};
+            for (const [key, values] of Object.entries(servicosSubcategorias)) {
+                totals[key] = getDataByPeriod(values, period).reduce((a, b) => a + b, 0);
+            }
+
+            const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+
+            if (doughnutChart) doughnutChart.destroy();
+
+            doughnutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: sorted.map(item => item[0]),
+                    datasets: [{
+                        data: sorted.map(item => item[1]),
+                        backgroundColor: coresArray,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.raw / total) * 100).toFixed(1);
+                                    return context.label + ': ' + formatCurrency(context.raw) + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Criar tabela resumo
+        function createTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            const period = document.getElementById('periodFilter').value;
+            const mesesFiltrados = getMesesByPeriod(period);
+            const startIdx = period === 'all' ? 0 :
+                             period === 'q1' ? 0 :
+                             period === 'q2' ? 3 :
+                             period === 'q3' ? 6 : 9;
+
+            mesesFiltrados.forEach((mes, idx) => {
+                const realIdx = startIdx + idx;
+                const pessoal = dadosPessoal[realIdx];
+                const material = dadosMaterial[realIdx];
+                const servicos = dadosServicos[realIdx];
+                const despesas = dadosDespesas[realIdx];
+                const total = totaisMensais[realIdx];
+
+                let variacao = 0;
+                let variacaoClass = '';
+                if (realIdx > 0) {
+                    variacao = ((total - totaisMensais[realIdx - 1]) / totaisMensais[realIdx - 1]) * 100;
+                    variacaoClass = variacao >= 0 ? 'negative' : 'positive';
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${mesesCompletos[realIdx]}</strong></td>
+                    <td>${formatCurrency(pessoal)}</td>
+                    <td>${formatCurrency(material)}</td>
+                    <td>${formatCurrency(servicos)}</td>
+                    <td>${formatCurrency(despesas)}</td>
+                    <td><strong>${formatCurrency(total)}</strong></td>
+                    <td class="${variacaoClass}">${realIdx > 0 ? (variacao >= 0 ? '+' : '') + variacao.toFixed(1) + '%' : '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Filtrar por categoria
+        function filterByCategory() {
+            const category = document.getElementById('categoryFilter').value;
+
+            if (category === 'all') {
+                activeCategories = ['pessoal', 'material', 'servicos', 'despesas'];
+            } else {
+                activeCategories = [category];
+            }
+
+            updateAllCharts();
+        }
+
+        // Filtrar por período
+        function filterByPeriod() {
+            currentPeriod = document.getElementById('periodFilter').value;
+            updateAllCharts();
+        }
+
+        // Limpar todos os filtros
+        function limparFiltros() {
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('periodFilter').value = 'all';
+            activeCategories = ['pessoal', 'material', 'servicos', 'despesas'];
+            currentPeriod = 'all';
+            selectedMonth = null;
+            selectedCategory = null;
+            selectedMaterial = null;
+            updateActiveFiltersDisplay();
+            updateAllCharts();
+        }
+
+        // Destacar mês em todos os gráficos (cross-filtering estilo Power BI)
+        function highlightMonth(monthIdx) {
+            const period = document.getElementById('periodFilter').value;
+            const startIdx = period === 'q2' ? 3 : period === 'q3' ? 6 : period === 'q4' ? 9 : 0;
+            const realIdx = startIdx + monthIdx;
+            const n = barChart ? barChart.data.datasets[0].data.length : 12;
+
+            // Destacar barra selecionada, dimming nas outras
+            if (barChart) {
+                barChart.data.datasets[0].backgroundColor = Array.from({length: n}, (_, i) =>
+                    i === monthIdx ? 'rgba(37, 99, 235, 1)' : 'rgba(37, 99, 235, 0.18)'
+                );
+                barChart.data.datasets[0].borderColor = Array.from({length: n}, (_, i) =>
+                    i === monthIdx ? 'rgb(14, 60, 180)' : 'rgba(37, 99, 235, 0.30)'
+                );
+                barChart.update('none');
+            }
+
+            // Destacar ponto no gráfico de linha
+            if (lineChart) {
+                lineChart.data.datasets.forEach(ds => {
+                    ds.pointRadius = ds.data.map((_, i) => i === monthIdx ? 10 : 3);
+                    ds.pointHoverRadius = ds.data.map((_, i) => i === monthIdx ? 13 : 6);
+                    ds.pointBorderWidth = ds.data.map((_, i) => i === monthIdx ? 3 : 1);
+                });
+                lineChart.update('none');
+            }
+        }
+
+        // Resetar todos os destaques visuais
+        function resetHighlights() {
+            if (barChart) {
+                const n = barChart.data.datasets[0].data.length;
+                barChart.data.datasets[0].backgroundColor = Array.from({length: n}, () => 'rgba(37, 99, 235, 0.85)');
+                barChart.data.datasets[0].borderColor = Array.from({length: n}, () => 'rgb(37, 99, 235)');
+                barChart.update('none');
+            }
+            if (lineChart) {
+                lineChart.data.datasets.forEach(ds => {
+                    ds.pointRadius = 5;
+                    ds.pointHoverRadius = 8;
+                    ds.pointBorderWidth = 1;
+                });
+                lineChart.update('none');
+            }
+        }
+
+        // Exibir filtros ativos no sidebar
+        function updateActiveFiltersDisplay() {
+            const badge = document.getElementById('activeFiltersBadge');
+            if (!badge) return;
+            const parts = [];
+            if (selectedMonth !== null) {
+                const period = document.getElementById('periodFilter').value;
+                const ml = getMesesByPeriod(period);
+                parts.push('📅 ' + (ml[selectedMonth] || ''));
+            }
+            if (selectedCategory !== null) {
+                const names = { pessoal: 'Pessoal', material: 'Material', servicos: 'Serviços', despesas: 'Despesas' };
+                parts.push('📂 ' + names[selectedCategory]);
+            }
+            if (selectedMaterial !== null) {
+                parts.push('📦 ' + selectedMaterial);
+            }
+            const periodVal = document.getElementById('periodFilter').value;
+            if (periodVal !== 'all') {
+                const pn = { q1: '1º Trim', q2: '2º Trim', q3: '3º Trim', q4: '4º Trim' };
+                parts.push('🗓 ' + pn[periodVal]);
+            }
+            if (parts.length > 0) {
+                badge.innerHTML = '<strong>Ativos:</strong><br>' + parts.join('<br>');
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Atualizar todos os gráficos
+        function updateAllCharts() {
+            updateKPIs();
+            createLineChart();
+            createPieChart();
+            createBarChart();
+            createHorizontalBarChart();
+            createDoughnutChart();
+            createTable();
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAllCharts();
+        });
+    </script>
+    </div>
+</body>
+</html>
